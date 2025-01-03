@@ -26,9 +26,9 @@ class ColorMatrixGPUNode:
             alpha = torch.ones((image_tensor.shape[0], 1, image_tensor.shape[2], image_tensor.shape[3]), device=image_tensor.device)
             image_tensor = torch.cat((image_tensor, alpha), dim=1)
         
-        # Reshape to (B, H*W, 4)
+        # Reshape to (B, H*W, C) where C is 4
         B, C, H, W = image_tensor.shape
-        image_flat = image_tensor.permute(0, 2, 3, 1).reshape(-1, 4)
+        image_flat = image_tensor.permute(0, 2, 3, 1).reshape(-1, C)  # Flatten (B, H, W, 4) to (B*H*W, 4)
         
         # Apply color matrix
         color_matrix = torch.tensor(color_matrix, device=image_tensor.device, dtype=image_tensor.dtype)
@@ -37,6 +37,7 @@ class ColorMatrixGPUNode:
         # Reshape back to (B, H, W, 4)
         image_transformed = transformed.view(B, H, W, 4).permute(0, 3, 1, 2)
         return image_transformed.clamp(0, 1)
+
 
     def run(self, image, color_matrix):
         # Parse color matrix string
