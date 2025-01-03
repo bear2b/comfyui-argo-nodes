@@ -1,16 +1,20 @@
 import torch
 import numpy as np
 from PIL import Image
-from comfy.model_base import Node
 
-class ColorMatrixGPUNode(Node):
-    def __init__(self):
-        super().__init__()
-        self.input_types = {
-            'image': ('IMAGE',),
-            'color_matrix': ('STRING',)  # Expect a 4x4 color matrix in string format (comma-separated)
+class ColorMatrixGPUNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "color_matrix": ("STRING",)  # Expect a 4x4 color matrix in string format (comma-separated)
+            }
         }
-        self.output_types = {'image': 'IMAGE'}
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "run"
+    CATEGORY = "Image/Processing"
 
     def apply_color_matrix(self, image_tensor, color_matrix):
         # Ensure image is in the correct shape (C, H, W)
@@ -35,7 +39,7 @@ class ColorMatrixGPUNode(Node):
         return image_transformed.clamp(0, 1)
 
     def run(self, image, color_matrix):
-        # Convert input color matrix string to a tensor
+        # Parse color matrix string
         try:
             matrix_values = [float(x) for x in color_matrix.split(',')]
             if len(matrix_values) != 16:
@@ -44,7 +48,7 @@ class ColorMatrixGPUNode(Node):
         except Exception as e:
             raise ValueError(f"Invalid color matrix: {e}")
         
-        # Ensure image is a tensor on GPU
+        # Convert image to tensor
         image_tensor = torch.from_numpy(np.array(image).astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).to('cuda')
         
         # Apply color matrix
@@ -52,5 +56,12 @@ class ColorMatrixGPUNode(Node):
         
         # Convert back to PIL image
         result_image = (result_tensor.squeeze(0).permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
-        return Image.fromarray(result_image)
+        return (Image.fromarray(result_image),)
 
+NODE_CLASS_MAPPINGS = {
+    'ColorMatrixGPU': ColorMatrixGPUNode
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    'ColorMatrixGPU': 'Color Matrix (GPU)'
+}
