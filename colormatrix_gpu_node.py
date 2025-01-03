@@ -49,14 +49,14 @@ class ColorMatrixGPUNode:
         except Exception as e:
             raise ValueError(f"Invalid color matrix: {e}")
         
-        # Convert image to tensor
-        image_tensor = torch.from_numpy(np.array(image).astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).to('cuda')
+        # Convert image to tensor (B, H, W, C) to (B, C, H, W)
+        image_tensor = torch.from_numpy(np.array(image).astype(np.float32) / 255.0).permute(0, 3, 1, 2).to('cuda')
         
         # Apply color matrix
         result_tensor = self.apply_color_matrix(image_tensor, matrix)
         
         # Convert back to PIL image
-        result_image = (result_tensor.squeeze(0).permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+        result_image = (result_tensor.permute(0, 2, 3, 1).cpu().numpy() * 255).astype(np.uint8)
         return (Image.fromarray(result_image),)
 
 NODE_CLASS_MAPPINGS = {
