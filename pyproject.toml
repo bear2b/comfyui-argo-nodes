@@ -1,0 +1,15 @@
+[project]
+name = "argo-nodes"
+description = "This node applies a custom 4x4 color matrix to an image using GPU acceleration via PyTorch."
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["torch>=1.13.0", "torchvision>=0.14.0", "pillow"]
+
+[project.urls]
+Repository = "https://github.com/bear2b/comfyui-argo-nodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "comfyui-argo-nodes"
+Icon = ""
