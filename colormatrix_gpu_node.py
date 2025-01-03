@@ -17,25 +17,25 @@ class ColorMatrixGPUNode:
     CATEGORY = "Image/Processing"
 
     def apply_color_matrix(self, image_tensor, color_matrix):
-        # Ensure image is in the correct shape (C, H, W)
-        if image_tensor.dim() == 4:
-            image_tensor = image_tensor.squeeze(0)
+        # Ensure image is in the correct shape (B, C, H, W)
+        if image_tensor.dim() == 3:
+            image_tensor = image_tensor.unsqueeze(0)
         
         # Add alpha channel if missing
-        if image_tensor.shape[0] == 3:
-            alpha = torch.ones((1, image_tensor.shape[1], image_tensor.shape[2]), device=image_tensor.device)
-            image_tensor = torch.cat((image_tensor, alpha), dim=0)
+        if image_tensor.shape[1] == 3:
+            alpha = torch.ones((image_tensor.shape[0], 1, image_tensor.shape[2], image_tensor.shape[3]), device=image_tensor.device)
+            image_tensor = torch.cat((image_tensor, alpha), dim=1)
         
-        # Reshape to (H*W, 4)
-        H, W = image_tensor.shape[1], image_tensor.shape[2]
-        image_flat = image_tensor.view(4, -1).T
+        # Reshape to (B, H*W, 4)
+        B, C, H, W = image_tensor.shape
+        image_flat = image_tensor.permute(0, 2, 3, 1).reshape(-1, 4)
         
         # Apply color matrix
         color_matrix = torch.tensor(color_matrix, device=image_tensor.device, dtype=image_tensor.dtype)
         transformed = torch.matmul(image_flat, color_matrix.T)
         
-        # Reshape back to (4, H, W)
-        image_transformed = transformed.T.view(4, H, W)
+        # Reshape back to (B, H, W, 4)
+        image_transformed = transformed.view(B, H, W, 4).permute(0, 3, 1, 2)
         return image_transformed.clamp(0, 1)
 
     def run(self, image, color_matrix):
