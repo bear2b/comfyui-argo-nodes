@@ -54,10 +54,3 @@ class ColorMatrixGPUNode(Node):
         result_image = (result_tensor.squeeze(0).permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
         return Image.fromarray(result_image)
 
-NODE_CLASS_MAPPINGS = {
-    'ColorMatrixGPU': ColorMatrixGPUNode
-}
-
-NODE_DISPLAY_NAME_MAPPINGS = {
-    'ColorMatrixGPU': 'Color Matrix (GPU)'
-}
