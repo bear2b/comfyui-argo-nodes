@@ -2,17 +2,28 @@
     "name": "ColorMatrixGPU",
     "description": "A ComfyUI node to apply a 4x4 color matrix to an image using GPU acceleration.",
     "author": "Argo",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "repository": "https://github.com/bear2b/comfyui-argo-nodes",
     "dependencies": [
       "torch>=1.13.0",
       "torchvision>=0.14.0",
-      "pillow"
+      "pillow",
+      "boto3"
     ],
     "nodes": [
       {
         "name": "ColorMatrixGPU",
         "class": "ColorMatrixGPUNode",
+        "file": "comfyui-argo-nodes"
+      },
+      {
+        "name": "LoadGridFromURL",
+        "class": "LoadGridFromURL",
+        "file": "comfyui-argo-nodes"
+      },
+      {
+        "name": "SaveGridToS3",
+        "class": "SaveGridToS3",
         "file": "comfyui-argo-nodes"
       }
     ]
