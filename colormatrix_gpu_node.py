@@ -190,6 +190,7 @@ class LoadGridFromURL:
 
     def run(self, prefix, names, suffix):
         # names = "3_21_0,4_21_0,5_21_0,6_21_0,7_21_0,3_22_0,4_22_0,5_22_0,6_22_0,7_22_0,3_23_0,4_23_0,5_23_0,6_23_0,7_23_0,3_24_0,4_24_0,5_24_0,6_24_0,7_24_0,3_25_0,4_25_0,5_25_0,6_25_0,7_25_0"
+        # names = "3_21,4_21,5_21,6_21,7_21,3_22,4_22,5_22,6_22,7_22,3_23,4_23,5_23,6_23,7_23,3_24,4_24,5_24,6_24,7_24,3_25,4_25,5_25,6_25,7_25"
         try:
             images = [(prefix+x+suffix) for x in names.split(',')]
             if len(images) != 25:
@@ -253,7 +254,7 @@ class SaveGridToS3:
     def run(self, image, prefix, names, suffix):
         # names = "3_21_1,4_21_1,5_21_1,6_21_1,7_21_1,3_22_1,4_22_1,5_22_1,6_22_1,7_22_1,3_23_1,4_23_1,5_23_1,6_23_1,7_23_1,3_24_1,4_24_1,5_24_1,6_24_1,7_24_1,3_25_1,4_25_1,5_25_1,6_25_1,7_25_1"
         try:
-            returnValue = [x for x in names.split(',')]
+            returnValue = [(x+"") for x in names.split(',')]
             images = [(prefix+x+suffix) for x in names.split(',')]
             if len(images) != 25:
                 raise ValueError("Image must have 25 values.")
@@ -270,23 +271,23 @@ class SaveGridToS3:
             grid_images = split_image_to_grid(img)
 
             # Upload each grid image to S3
-            #for idx, image in enumerate(grid_images):
-            #    object_name = f"{images[idx]}"
-            #    upload_image_to_s3(image, bucket_name, object_name, s3_client)
+            for idx, image in enumerate(grid_images):
+                object_name = f"{images[idx]}"
+                upload_image_to_s3(0,image, bucket_name, object_name, s3_client)
             bools = [None] * len(grid_images)
-            with ThreadPoolExecutor() as executor:
-                future_to_index = {
-                    executor.submit(upload_image_to_s3, idx, image, bucket_name, f"{images[idx]}", s3_client): idx
-                    for idx, image in enumerate(grid_images)
-                }
-                for future in as_completed(future_to_index):
-                    try:
-                        index, success = future.result()
-                        bools[index] = success
-                    except Exception as e:
-                        print(f"Error posting : {e}")
-            if any(img is None for img in bools):
-                raise RuntimeError("Some images failed to upload.")
+            #with ThreadPoolExecutor() as executor:
+            #    future_to_index = {
+            #        executor.submit(upload_image_to_s3, idx, image, bucket_name, f"{images[idx]}", s3_client): idx
+            #        for idx, image in enumerate(grid_images)
+            #    }
+            #    for future in as_completed(future_to_index):
+            #        try:
+            #            index, success = future.result()
+            #            bools[index] = success
+            #        except Exception as e:
+            #            print(f"Error posting : {e}")
+            #if any(img is None for img in bools):
+            #    raise RuntimeError("Some images failed to upload.")
         except Exception as e:
             raise ValueError(f"Invalid input: {e}")
         
