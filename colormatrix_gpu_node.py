@@ -271,27 +271,27 @@ class SaveGridToS3:
             grid_images = split_image_to_grid(img)
 
             # Upload each grid image to S3
-            for idx, image in enumerate(grid_images):
-                object_name = f"{images[idx]}"
-                upload_image_to_s3(0,image, bucket_name, object_name, s3_client)
+            #for idx, image in enumerate(grid_images):
+            #    object_name = f"{images[idx]}"
+            #    upload_image_to_s3(image, bucket_name, object_name, s3_client)
             bools = [None] * len(grid_images)
-            #with ThreadPoolExecutor() as executor:
-            #    future_to_index = {
-            #        executor.submit(upload_image_to_s3, idx, image, bucket_name, f"{images[idx]}", s3_client): idx
-            #        for idx, image in enumerate(grid_images)
-            #    }
-            #    for future in as_completed(future_to_index):
-            #        try:
-            #            index, success = future.result()
-            #            bools[index] = success
-            #        except Exception as e:
-            #            print(f"Error posting : {e}")
-            #if any(img is None for img in bools):
-            #    raise RuntimeError("Some images failed to upload.")
+            with ThreadPoolExecutor() as executor:
+                future_to_index = {
+                    executor.submit(upload_image_to_s3, idx, image, bucket_name, f"{images[idx]}", s3_client): idx
+                    for idx, image in enumerate(grid_images)
+                }
+                for future in as_completed(future_to_index):
+                    try:
+                        index, success = future.result()
+                        bools[index] = success
+                    except Exception as e:
+                        print(f"Error posting : {e}")
+            if any(img is None for img in bools):
+                raise RuntimeError("Some images failed to upload.")
         except Exception as e:
             raise ValueError(f"Invalid input: {e}")
         
-        return { "ui": { "images": returnValue }, "result": (returnValue,) } # "ui": { "images": results },
+        return { "ui": { "images": (returnValue,) }, "result": (returnValue,) } # "ui": { "images": results },
         
 
 
