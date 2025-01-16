@@ -222,14 +222,23 @@ def split_image_to_grid(input_image, grid_size=(5, 5)):
     return grid_images
 
 def upload_image_to_s3(index, image, bucket_name, object_name, s3_client):
-    # Convert image to a bytes buffer
-    buffer = BytesIO()
-    image.save(buffer, format="PNG")
-    buffer.seek(0)
+    try:
+        # Convert image to a bytes buffer
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        buffer.seek(0)
 
-    # Upload the image to S3
-    s3_client.upload_fileobj(buffer, bucket_name, object_name)
-    return index, True
+        # Upload the image to S3
+        s3_client.upload_fileobj(buffer, bucket_name, object_name)
+        return index, True
+    except ClientError as e:
+        # Log the error and raise it for further handling
+        print(f"Error uploading image {index} to S3: {e}")
+        return index, False
+    except Exception as e:
+        # Handle any other unexpected exceptions
+        print(f"Unexpected error for image {index}: {e}")
+        return index, False
 
 
 class SaveGridToS3:
@@ -285,8 +294,10 @@ class SaveGridToS3:
                         index, success = future.result()
                         bools[index] = success
                     except Exception as e:
-                        print(f"Error posting : {e}")
+                        raise RuntimeError("Error posting : {e}")
             if any(img is None for img in bools):
+                raise RuntimeError("Some images failed to upload.")
+            if any(img is False for img in bools):
                 raise RuntimeError("Some images failed to upload.")
         except Exception as e:
             raise ValueError(f"Invalid input: {e}")
